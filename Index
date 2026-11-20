@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AmneziaWG Config Maker</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5f6b7a;--bd:#d8dde4;--ac:#2563eb;--ok:#15803d}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#181e26;--tx:#e8ecf1;--mut:#97a3b3;--bd:#2c3542;--ac:#5b8def;--ok:#4ade80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,Segoe UI,Tahoma,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.4rem;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-top:16px}
+h2{font-size:1rem;margin:0 0 8px}
+p,.mut{color:var(--mut);margin:4px 0 8px;font-size:.92rem}
+textarea{width:100%;min-height:170px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:10px;font:13px/1.4 ui-monospace,Consolas,monospace;direction:ltr;text-align:left}
+button,.btn{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;cursor:pointer;margin:8px 8px 0 0}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{border:1px solid var(--bd);border-radius:8px;padding:8px 12px;cursor:pointer}
+.opts input{margin-inline-end:6px}
+.opts label:has(input:checked){border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid input{width:100%;padding:6px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx)}
+.msg{color:var(--ok);min-height:1.4em}.err{color:#dc2626}
+#qr{margin-top:12px;background:#fff;padding:16px;border-radius:8px;display:inline-block}#qr svg{display:block;width:260px;height:260px}
+details{margin-top:12px}summary{cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1 id="t_title"></h1><button class="sec" id="lang" type="button">فارسی</button></div>
+<p id="t_sub"></p>
+
+<div class="card">
+<h2 id="t_s1"></h2>
+<textarea id="in" spellcheck="false" placeholder="[Interface]&#10;PrivateKey = ...&#10;Address = ...&#10;&#10;[Peer]&#10;PublicKey = ...&#10;Endpoint = ..."></textarea>
+<input type="file" id="file" accept=".conf,.txt" hidden>
+<button class="sec" id="up" type="button"></button>
+</div>
+
+<div class="card">
+<h2 id="t_s2"></h2>
+<div class="opts" id="presets"></div>
+<p id="pdesc"></p>
+<p><label><input type="checkbox" id="rz" checked> <span id="t_rz"></span></label></p>
+<details><summary id="t_adv"></summary>
+<div class="grid" style="margin-top:8px">
+<label>Jc<input id="jc" type="number" value="4"></label>
+<label>Jmin<input id="jmin" type="number" value="40"></label>
+<label>Jmax<input id="jmax" type="number" value="70"></label>
+</div>
+<p><label><input type="checkbox" id="sh"> <span id="t_sh"></span></label></p>
+</details>
+<details><summary id="t_ext"></summary>
+<div class="grid" style="margin-top:8px;grid-template-columns:2fr 1fr">
+<label>Endpoint (IP / domain)<input id="ep_host" type="text" dir="ltr" autocomplete="off"></label>
+<label>Port<input id="ep_port" type="number" min="1" max="65535"></label>
+</div>
+<p id="t_epn"></p>
+<div class="grid" style="margin-top:8px">
+<label>PersistentKeepalive<input id="ka" type="number" min="0" max="65535"></label>
+<label>DNS<input id="dns" type="text" dir="ltr"></label>
+<label>MTU<input id="mtu" type="number" min="576" max="9000"></label>
+</div>
+<p id="t_exth"></p>
+</details>
+<button id="go" type="button"></button>
+</div>
+
+<div class="card">
+<h2 id="t_s3"></h2>
+<textarea id="out" readonly spellcheck="false"></textarea>
+<button id="copy" type="button"></button><button class="sec" id="dl" type="button"></button><button class="sec" id="qrb" type="button"></button>
+<div id="qr" hidden></div>
+<div class="msg" id="msg"></div>
+</div>
+
+<p class="mut" id="t_priv"></p>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+// ===== Add or edit presets here. Each preset gives I1..I5 in AmneziaWG CPS syntax. =====
+const hx=s=>[...s].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
+const RN=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[RN(0,a.length-1)];
+let RZ=true;const v=(d,a,b)=>RZ?RN(a,b):d;
+const qn=d=>hx(d.split('.').map(l=>String.fromCharCode(l.length)+l).join('')+'\x00');
+const DOM=['www.google.com','www.microsoft.com','cloudflare.com','www.apple.com','youtube.com','www.wikipedia.org','github.com','www.amazon.com'];
+const qk=(b0,ver)=>()=>{const n=v(1008,600,1150);return['<b 0x'+b0+ver+'08><r 8><b 0x0000'+(0x4000|n).toString(16)+'><r '+n+'>','<b 0x40><r '+v(128,70,400)+'>']};
+const PRESETS={
+ none:{en:'Junk only',fa:'فقط داده‌ی تصادفی',d:{en:'Only junk packets (Jc/Jmin/Jmax). No protocol mimicry.',fa:'فقط بسته‌های تصادفی، بدون تقلید پروتکل.'},i:()=>[]},
+ quic:{en:'Mimic QUIC',fa:'تقلید QUIC',d:{en:'Handshake looks like QUIC (HTTP/3) traffic.',fa:'شروع اتصال شبیه ترافیک QUIC به نظر می‌رسد.'},i:qk('d0','6b3343cf')},
+ dns:{en:'Mimic DNS',fa:'تقلید DNS',d:{en:'Handshake looks like a DNS lookup.',fa:'شروع اتصال شبیه درخواست DNS است.'},
+  i:()=>(RZ?[pick(DOM),pick(DOM)]:['www.google.com','youtube.com']).map(x=>'<r 2><b 0x01000001000000000000'+qn(x)+(RZ?pick(['0001','001c']):'0001')+'0001>')},
+ sip:{en:'Mimic SIP',fa:'تقلید SIP',d:{en:'Handshake looks like a VoIP/SIP call setup.',fa:'شروع اتصال شبیه تماس صوتی SIP است.'},
+  i:()=>{const ip='192.168.'+v(1,0,255)+'.'+v(2,2,254),pt=v(5060,5060,5090),dm=RZ?pick(['example.com','sip.local','voip.example.net','pbx.example.org']):'example.com';
+   return['<b 0x'+hx('REGISTER sip:'+dm+' SIP/2.0\r\nVia: SIP/2.0/UDP '+ip+':'+pt+';branch=z9hG4bK')+'><rd 8><b 0x'+hx('\r\nMax-Forwards: 70\r\n\r\n')+'>',
+    '<b 0x'+hx('OPTIONS sip:'+dm+' SIP/2.0\r\nCall-ID: ')+'><rc 12><b 0x'+hx('@'+ip+'\r\nCSeq: 1 OPTIONS\r\n\r\n')+'>']}},
+ stun:{en:'Mimic STUN',fa:'تقلید STUN',d:{en:'Handshake looks like a WebRTC/STUN request (video calls).',fa:'شروع اتصال شبیه درخواست STUN در تماس تصویری است.'},
+  i:()=>['<b 0x000100002112a442><r 12>','<b 0x000100002112a442><r 12>']},
+ mix:{en:'Surprise me',fa:'تصادفی',d:{en:'Picks a random disguise each time.',fa:'هر بار یک پوشش تصادفی انتخاب می‌شود.'},
+  i:()=>PRESETS[pick(['quic','dns','sip','stun'])].i()}
+};
+const T={
+ en:{title:'AmneziaWG Config Maker',sub:'Turn a normal WireGuard config into an AmneziaWG config that is harder to block.',
+  s1:'1. Paste your WireGuard config or wireguard:// link',up:'Or choose a .conf file',s2:'2. Pick a disguise',adv:'Advanced',
+  sh:'Also randomize S1/S2/H1–H4 (your server must use the SAME values, so leave this off for normal WireGuard servers)',
+  go:'Convert',s3:'3. Copy into your app',copy:'Copy',dl:'Download .conf',
+  priv:'Everything happens in your browser. Your keys are never uploaded or saved (only your settings are remembered). Works with apps that support AmneziaWG 1.5+ (WG Tunnel, AmneziaWG, WireSock…).',
+  badlink:'This wireguard:// link is missing a key, address, endpoint or public key.',bad:'No [Interface] section found. Please paste a full WireGuard config.',copied:'Copied!',ext:'Extra settings (Server address, Keepalive, DNS, MTU)',epn:'Server address and port are read from your config. Change them to connect to a specific IP instead of a domain.',badep:'Server address or port is not valid.',exth:'Leave a box empty to keep the value from your config. Type a value to set or replace it. Keepalive 0 turns it off.',keep:'keep as is',badopt:'Keepalive and MTU must be numbers.',kept:'Your existing S/H values were kept.',rz:'Randomize (recommended): new junk sizes and packet shapes every time, so no two users look alike',qr:'Show QR code',qrbig:'Config is too long for a QR code. Use Copy or Download.',done:'Done! Import it into your app.',lang:'فارسی'},
+ fa:{title:'ساخت کانفیگ AmneziaWG',sub:'کانفیگ معمولی وایرگارد را به کانفیگ AmneziaWG تبدیل کنید تا سخت‌تر بلاک شود.',
+  s1:'۱. کانفیگ وایرگارد یا لینک wireguard:// را اینجا بچسبانید',up:'یا فایل .conf را انتخاب کنید',s2:'۲. نوع پوشش را انتخاب کنید',adv:'پیشرفته',
+  sh:'مقادیر S1/S2/H1–H4 هم تصادفی شوند (سرور باید دقیقاً همین مقادیر را داشته باشد؛ برای سرور معمولی وایرگارد خاموش بماند)',
+  go:'تبدیل',s3:'۳. در برنامه وارد کنید',copy:'کپی',dl:'دانلود .conf',
+  priv:'همه‌چیز داخل مرورگر شما انجام می‌شود و کلیدها هرگز ارسال یا ذخیره نمی‌شوند (فقط تنظیمات شما ذخیره می‌شود). با برنامه‌هایی که AmneziaWG 1.5+ را پشتیبانی می‌کنند کار می‌کند.',
+  badlink:'در این لینک wireguard:// کلید، آدرس، اندپوینت یا کلید عمومی وجود ندارد.',bad:'بخش [Interface] پیدا نشد. کانفیگ کامل را بچسبانید.',copied:'کپی شد!',ext:'تنظیمات اضافه (آدرس سرور، Keepalive، DNS، MTU)',epn:'آدرس و پورت سرور از کانفیگ خوانده می‌شود. برای اتصال با IP به‌جای دامنه آن را تغییر دهید.',badep:'آدرس یا پورت سرور معتبر نیست.',exth:'خالی بگذارید تا مقدار کانفیگ شما حفظ شود. مقدار بنویسید تا جایگزین شود. Keepalive برابر 0 آن را خاموش می‌کند.',keep:'بدون تغییر',badopt:'Keepalive و MTU باید عدد باشند.',kept:'مقادیر S/H موجود در کانفیگ شما حفظ شد.',rz:'تصادفی‌سازی (پیشنهاد می‌شود): هر بار اندازه و شکل بسته‌ها فرق می‌کند تا کاربران شبیه هم نباشند',qr:'نمایش QR',qrbig:'کانفیگ برای QR بیش از حد طولانی است. از کپی یا دانلود استفاده کنید.',done:'آماده است! آن را در برنامه وارد کنید.',lang:'English'}
+};
+let L='en',P='quic';
+function fromLink(u){
+ try{
+  u=u.replace(/^wireguard:\/\//i,'').split('#')[0];
+  const qi=u.indexOf('?'),main=qi<0?u:u.slice(0,qi),q=new URLSearchParams(qi<0?'':u.slice(qi+1));
+  const at=main.lastIndexOf('@');if(at<0)return null;
+  let key=main.slice(0,at);try{key=decodeURIComponent(key)}catch(_){}
+  const ep=main.slice(at+1).replace(/\/$/,'');
+  const g=(...n)=>{for(const k of n)for(const [a,b] of q)if(a.toLowerCase()===k)return b;return''};
+  const addr=g('address','ip','local_address','localaddress'),pub=g('publickey','public_key','peer_public_key','peerpublickey').replace(/ /g,'+');
+  if(!key||!ep||!addr||!pub)return null;
+  const o=['[Interface]','PrivateKey = '+key,'Address = '+addr],dns=g('dns'),mtu=g('mtu');
+  if(dns)o.push('DNS = '+dns);if(mtu)o.push('MTU = '+mtu);
+  o.push('','[Peer]','PublicKey = '+pub);
+  const psk=g('presharedkey','preshared_key','psk').replace(/ /g,'+');if(psk)o.push('PresharedKey = '+psk);
+  o.push('AllowedIPs = '+(g('allowedips','allowed_ips')||'0.0.0.0/0, ::/0'),'Endpoint = '+ep,'PersistentKeepalive = '+(g('keepalive','persistentkeepalive')||25));
+  return o.join('\n');
+ }catch(_){return null}
+}
+function setKey(l,sec,key,val,one){
+ const re=new RegExp('^\\s*'+key+'\\s*=','i'),o=[],h=[];let cur='',n=0;
+ for(const x of l){const m=x.match(/^\s*\[(.+?)\]/);if(m){cur=m[1].toLowerCase();if(cur===sec)n++}
+  if(cur===sec&&re.test(x)&&(!one||n===1))continue;o.push(x)}
+ o.forEach((x,i)=>{const m=x.match(/^\s*\[(.+?)\]/);if(m&&m[1].toLowerCase()===sec)h.push(i)});
+ const hs=one?h.slice(0,1):h;
+ for(let k=hs.length-1;k>=0;k--){let e=o.findIndex((x,i)=>i>hs[k]&&/^\s*\[/.test(x));if(e<0)e=o.length;while(e>hs[k]+1&&!o[e-1].trim())e--;o.splice(e,0,key+' = '+val)}
+ return o;
+}
+let OR={host:'',port:''};
+function readEp(t){const m=t.match(/^\s*Endpoint\s*=\s*(.+?)\s*$/im);if(!m)return{host:'',port:''};const v=m[1];
+ let r=v.match(/^\[(.+)\](?::(\d+))?$/);if(r)return{host:r[1],port:r[2]||''};
+ r=v.match(/^([^:]+):(\d+)$/);if(r)return{host:r[1],port:r[2]};return{host:v,port:''}}
+function fillEp(){let t=$('in').value.replace(/^\uFEFF/,'').trim();if(/^wireguard:\/\//i.test(t))t=fromLink(t)||'';
+ OR=readEp(t);$('ep_host').value=OR.host;$('ep_port').value=OR.port}
+const KEY='awg-settings';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({L,P,rz:$('rz').checked,sh:$('sh').checked,jc:$('jc').value,jmin:$('jmin').value,jmax:$('jmax').value,ka:$('ka').value,dn:$('dns').value,mt:$('mtu').value}))}catch(_){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');if(d.L in T)L=d.L;if(d.P in PRESETS)P=d.P;
+ if(d.rz!==undefined)$('rz').checked=d.rz;if(d.sh!==undefined)$('sh').checked=d.sh;
+ if(d.ka)$('ka').value=d.ka;if(d.dn)$('dns').value=d.dn;if(d.mt)$('mtu').value=d.mt;if(d.jc)$('jc').value=d.jc;if(d.jmin)$('jmin').value=d.jmin;if(d.jmax)$('jmax').value=d.jmax}catch(_){}}
+const $=id=>document.getElementById(id);
+function render(){
+ const t=T[L];document.documentElement.lang=L;document.documentElement.dir=L==='fa'?'rtl':'ltr';
+ $('t_title').textContent=t.title;$('t_sub').textContent=t.sub;$('t_s1').textContent=t.s1;$('up').textContent=t.up;
+ $('t_s2').textContent=t.s2;$('t_adv').textContent=t.adv;$('t_sh').textContent=t.sh;$('go').textContent=t.go;
+ $('t_s3').textContent=t.s3;$('t_rz').textContent=t.rz;$('t_ext').textContent=t.ext;$('t_epn').textContent=t.epn;$('t_exth').textContent=t.exth;['ka','dns','mtu'].forEach(i=>$(i).placeholder=t.keep);$('qrb').textContent=t.qr;$('copy').textContent=t.copy;$('dl').textContent=t.dl;$('t_priv').textContent=t.priv;$('lang').textContent=t.lang;
+ $('presets').innerHTML=Object.keys(PRESETS).map(k=>`<label><input type="radio" name="p" value="${k}" ${k===P?'checked':''}>${PRESETS[k][L]}</label>`).join('');
+ document.querySelectorAll('input[name=p]').forEach(r=>r.onchange=()=>{P=r.value;$('pdesc').textContent=PRESETS[P].d[L];save()});
+ $('pdesc').textContent=PRESETS[P].d[L];
+}
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+function convert(){
+ const t=T[L],msg=$('msg');msg.className='msg';msg.textContent='';
+ let raw=$('in').value.replace(/^\uFEFF/,'').trim();
+ if(/^wireguard:\/\//i.test(raw)){const c=fromLink(raw);if(!c){msg.className='msg err';msg.textContent=t.badlink;return}raw=c;$('in').value=c}
+ const SH=$('sh').checked,hadSH=!SH&&/^\s*(S[1-4]|H[1-4])\s*=/im.test(raw);
+ let lines=raw.replace(/\r/g,'').split('\n').filter(l=>!(SH?/^\s*(Jc|Jmin|Jmax|S[1-4]|H[1-4]|I[1-5])\s*=/i:/^\s*(Jc|Jmin|Jmax|I[1-5])\s*=/i).test(l));
+ const ka=$('ka').value.trim(),dn=$('dns').value.trim(),mt=$('mtu').value.trim();
+ if((ka&&!/^\d{1,5}$/.test(ka))||(mt&&!/^\d{3,4}$/.test(mt))){msg.className='msg err';msg.textContent=t.badopt;return}
+ if(ka!=='')lines=setKey(lines,'peer','PersistentKeepalive',ka);
+ if(dn)lines=setKey(lines,'interface','DNS',dn);
+ if(mt)lines=setKey(lines,'interface','MTU',mt);
+ const eh=$('ep_host').value.trim(),ep=$('ep_port').value.trim();
+ if(/\s/.test(eh)||(ep&&!(/^\d{1,5}$/.test(ep)&&+ep>0&&+ep<65536))){msg.className='msg err';msg.textContent=t.badep;return}
+ if(eh&&(eh!==OR.host||ep!==OR.port))lines=setKey(lines,'peer','Endpoint',(eh.includes(':')&&eh[0]!=='['?'['+eh+']':eh)+(ep?':'+ep:''),true);
+ const s=lines.findIndex(l=>/^\s*\[Interface\]/i.test(l));
+ if(s<0){msg.className='msg err';msg.textContent=t.bad;return}
+ let e=lines.findIndex((l,i)=>i>s&&/^\s*\[/.test(l));if(e<0)e=lines.length;
+ while(e>s+1&&!lines[e-1].trim())e--;
+ RZ=$('rz').checked;
+ if(RZ){$('jc').value=RN(3,6);$('jmin').value=RN(20,60);$('jmax').value=+$('jmin').value+RN(30,80)}
+ let jmin=+$('jmin').value,jmax=+$('jmax').value;if(jmax<=jmin)jmax=jmin+30;
+ const add=['Jc = '+(+$('jc').value),'Jmin = '+jmin,'Jmax = '+jmax];
+ if($('sh').checked){
+  let s1=rnd(15,150),s2=rnd(15,150);while(s1+56===s2)s2=rnd(15,150);
+  const h=new Set();while(h.size<4)h.add(rnd(5,2147483647));
+  add.push('S1 = '+s1,'S2 = '+s2,...[...h].map((v,i)=>'H'+(i+1)+' = '+v));
+ }
+ PRESETS[P].i().forEach((x,i)=>add.push('I'+(i+1)+' = '+x));
+ lines.splice(e,0,...add);
+ $('out').value=lines.join('\n');$('qr').hidden=true;
+ msg.textContent=t.done+(hadSH?' '+t.kept:'');save();
+}
+$('go').onclick=convert;
+$('in').oninput=fillEp;
+$('qrb').onclick=()=>{const t=$('out').value,m=$('msg');if(!t)return;m.className='msg';
+ try{const q=qrcode(0,'L');q.addData(t);q.make();$('qr').innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true});$('qr').hidden=false}
+ catch(e){m.className='msg err';m.textContent=T[L].qrbig}};
+$('lang').onclick=()=>{L=L==='en'?'fa':'en';render();save()};
+$('up').onclick=()=>$('file').click();
+$('file').onchange=async e=>{const f=e.target.files[0];if(f){$('in').value=await f.text();fillEp();convert()}};
+$('copy').onclick=async()=>{const v=$('out').value;if(!v)return;try{await navigator.clipboard.writeText(v)}catch(_){$('out').select();document.execCommand('copy')}$('msg').className='msg';$('msg').textContent=T[L].copied};
+$('dl').onclick=()=>{const v=$('out').value;if(!v)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([v],{type:'text/plain'}));a.download='amnezia.conf';a.click()};
+load();
+['rz','sh','jc','jmin','jmax','ka','dns','mtu'].forEach(id=>$(id).onchange=save);
+render();
+</script>
+</body>
+</html>
