@@ -55,6 +55,7 @@ details{margin-top:12px}summary{cursor:pointer}
 <p><label><input type="checkbox" id="sh"> <span id="t_sh"></span></label></p>
 </details>
 <details><summary id="t_ext"></summary>
+<p><label><input type="checkbox" id="v4"> <span id="t_v4"></span></label></p>
 <div class="grid" style="margin-top:8px;grid-template-columns:2fr 1fr">
 <label>Endpoint (IP / domain)<input id="ep_host" type="text" dir="ltr" autocomplete="off"></label>
 <label>Port<input id="ep_port" type="number" min="1" max="65535"></label>
@@ -109,13 +110,13 @@ const T={
   sh:'Also randomize S1/S2/H1–H4 (your server must use the SAME values, so leave this off for normal WireGuard servers)',
   go:'Convert',s3:'3. Copy into your app',copy:'Copy',dl:'Download .conf',
   priv:'Everything happens in your browser. Your keys are never uploaded or saved (only your settings are remembered). Works with apps that support AmneziaWG 1.5+ (WG Tunnel, AmneziaWG, WireSock…).',
-  badlink:'This wireguard:// link is missing a key, address, endpoint or public key.',bad:'No [Interface] section found. Please paste a full WireGuard config.',copied:'Copied!',ext:'Extra settings (Server address, Keepalive, DNS, MTU)',epn:'Server address and port are read from your config. Change them to connect to a specific IP instead of a domain.',badep:'Server address or port is not valid.',exth:'Leave a box empty to keep the value from your config. Type a value to set or replace it. Keepalive 0 turns it off.',keep:'keep as is',badopt:'Keepalive and MTU must be numbers.',kept:'Your existing S/H values were kept.',rz:'Randomize (recommended): new junk sizes and packet shapes every time, so no two users look alike',qr:'Show QR code',qrbig:'Config is too long for a QR code. Use Copy or Download.',done:'Done! Import it into your app.',lang:'فارسی'},
+  badlink:'This wireguard:// link is missing a key, address, endpoint or public key.',bad:'No [Interface] section found. Please paste a full WireGuard config.',copied:'Copied!',ext:'Extra settings (IPv4 only, Server address, Keepalive, DNS, MTU)',v4:'IPv4 only: remove IPv6 from Address, DNS and AllowedIPs',v4ep:'Note: the server address itself is IPv6 and was not changed.',nov4:'This config has no IPv4 Address, so it cannot be made IPv4-only.',epn:'Server address and port are read from your config. Change them to connect to a specific IP instead of a domain.',badep:'Server address or port is not valid.',exth:'Leave a box empty to keep the value from your config. Type a value to set or replace it. Keepalive 0 turns it off.',keep:'keep as is',badopt:'Keepalive and MTU must be numbers.',kept:'Your existing S/H values were kept.',rz:'Randomize (recommended): new junk sizes and packet shapes every time, so no two users look alike',qr:'Show QR code',qrbig:'Config is too long for a QR code. Use Copy or Download.',done:'Done! Import it into your app.',lang:'فارسی'},
  fa:{title:'ساخت کانفیگ AmneziaWG',sub:'کانفیگ معمولی وایرگارد را به کانفیگ AmneziaWG تبدیل کنید تا سخت‌تر بلاک شود.',
   s1:'۱. کانفیگ وایرگارد یا لینک wireguard:// را اینجا بچسبانید',up:'یا فایل .conf را انتخاب کنید',s2:'۲. نوع پوشش را انتخاب کنید',adv:'پیشرفته',
   sh:'مقادیر S1/S2/H1–H4 هم تصادفی شوند (سرور باید دقیقاً همین مقادیر را داشته باشد؛ برای سرور معمولی وایرگارد خاموش بماند)',
   go:'تبدیل',s3:'۳. در برنامه وارد کنید',copy:'کپی',dl:'دانلود .conf',
   priv:'همه‌چیز داخل مرورگر شما انجام می‌شود و کلیدها هرگز ارسال یا ذخیره نمی‌شوند (فقط تنظیمات شما ذخیره می‌شود). با برنامه‌هایی که AmneziaWG 1.5+ را پشتیبانی می‌کنند کار می‌کند.',
-  badlink:'در این لینک wireguard:// کلید، آدرس، اندپوینت یا کلید عمومی وجود ندارد.',bad:'بخش [Interface] پیدا نشد. کانفیگ کامل را بچسبانید.',copied:'کپی شد!',ext:'تنظیمات اضافه (آدرس سرور، Keepalive، DNS، MTU)',epn:'آدرس و پورت سرور از کانفیگ خوانده می‌شود. برای اتصال با IP به‌جای دامنه آن را تغییر دهید.',badep:'آدرس یا پورت سرور معتبر نیست.',exth:'خالی بگذارید تا مقدار کانفیگ شما حفظ شود. مقدار بنویسید تا جایگزین شود. Keepalive برابر 0 آن را خاموش می‌کند.',keep:'بدون تغییر',badopt:'Keepalive و MTU باید عدد باشند.',kept:'مقادیر S/H موجود در کانفیگ شما حفظ شد.',rz:'تصادفی‌سازی (پیشنهاد می‌شود): هر بار اندازه و شکل بسته‌ها فرق می‌کند تا کاربران شبیه هم نباشند',qr:'نمایش QR',qrbig:'کانفیگ برای QR بیش از حد طولانی است. از کپی یا دانلود استفاده کنید.',done:'آماده است! آن را در برنامه وارد کنید.',lang:'English'}
+  badlink:'در این لینک wireguard:// کلید، آدرس، اندپوینت یا کلید عمومی وجود ندارد.',bad:'بخش [Interface] پیدا نشد. کانفیگ کامل را بچسبانید.',copied:'کپی شد!',ext:'تنظیمات اضافه (فقط IPv4، آدرس سرور، Keepalive، DNS، MTU)',v4:'فقط IPv4: حذف IPv6 از Address، DNS و AllowedIPs',v4ep:'توجه: خود آدرس سرور IPv6 است و تغییر نکرد.',nov4:'این کانفیگ آدرس IPv4 ندارد، پس نمی‌توان آن را فقط IPv4 کرد.',epn:'آدرس و پورت سرور از کانفیگ خوانده می‌شود. برای اتصال با IP به‌جای دامنه آن را تغییر دهید.',badep:'آدرس یا پورت سرور معتبر نیست.',exth:'خالی بگذارید تا مقدار کانفیگ شما حفظ شود. مقدار بنویسید تا جایگزین شود. Keepalive برابر 0 آن را خاموش می‌کند.',keep:'بدون تغییر',badopt:'Keepalive و MTU باید عدد باشند.',kept:'مقادیر S/H موجود در کانفیگ شما حفظ شد.',rz:'تصادفی‌سازی (پیشنهاد می‌شود): هر بار اندازه و شکل بسته‌ها فرق می‌کند تا کاربران شبیه هم نباشند',qr:'نمایش QR',qrbig:'کانفیگ برای QR بیش از حد طولانی است. از کپی یا دانلود استفاده کنید.',done:'آماده است! آن را در برنامه وارد کنید.',lang:'English'}
 };
 let L='en',P='quic';
 function fromLink(u){
@@ -152,16 +153,16 @@ function readEp(t){const m=t.match(/^\s*Endpoint\s*=\s*(.+?)\s*$/im);if(!m)retur
 function fillEp(){let t=$('in').value.replace(/^\uFEFF/,'').trim();if(/^wireguard:\/\//i.test(t))t=fromLink(t)||'';
  OR=readEp(t);$('ep_host').value=OR.host;$('ep_port').value=OR.port}
 const KEY='awg-settings';
-function save(){try{localStorage.setItem(KEY,JSON.stringify({L,P,rz:$('rz').checked,sh:$('sh').checked,jc:$('jc').value,jmin:$('jmin').value,jmax:$('jmax').value,ka:$('ka').value,dn:$('dns').value,mt:$('mtu').value}))}catch(_){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({L,P,rz:$('rz').checked,sh:$('sh').checked,v4:$('v4').checked,jc:$('jc').value,jmin:$('jmin').value,jmax:$('jmax').value,ka:$('ka').value,dn:$('dns').value,mt:$('mtu').value}))}catch(_){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');if(d.L in T)L=d.L;if(d.P in PRESETS)P=d.P;
- if(d.rz!==undefined)$('rz').checked=d.rz;if(d.sh!==undefined)$('sh').checked=d.sh;
+ if(d.rz!==undefined)$('rz').checked=d.rz;if(d.sh!==undefined)$('sh').checked=d.sh;if(d.v4!==undefined)$('v4').checked=d.v4;
  if(d.ka)$('ka').value=d.ka;if(d.dn)$('dns').value=d.dn;if(d.mt)$('mtu').value=d.mt;if(d.jc)$('jc').value=d.jc;if(d.jmin)$('jmin').value=d.jmin;if(d.jmax)$('jmax').value=d.jmax}catch(_){}}
 const $=id=>document.getElementById(id);
 function render(){
  const t=T[L];document.documentElement.lang=L;document.documentElement.dir=L==='fa'?'rtl':'ltr';
  $('t_title').textContent=t.title;$('t_sub').textContent=t.sub;$('t_s1').textContent=t.s1;$('up').textContent=t.up;
  $('t_s2').textContent=t.s2;$('t_adv').textContent=t.adv;$('t_sh').textContent=t.sh;$('go').textContent=t.go;
- $('t_s3').textContent=t.s3;$('t_rz').textContent=t.rz;$('t_ext').textContent=t.ext;$('t_epn').textContent=t.epn;$('t_exth').textContent=t.exth;['ka','dns','mtu'].forEach(i=>$(i).placeholder=t.keep);$('qrb').textContent=t.qr;$('copy').textContent=t.copy;$('dl').textContent=t.dl;$('t_priv').textContent=t.priv;$('lang').textContent=t.lang;
+ $('t_s3').textContent=t.s3;$('t_rz').textContent=t.rz;$('t_ext').textContent=t.ext;$('t_v4').textContent=t.v4;$('t_epn').textContent=t.epn;$('t_exth').textContent=t.exth;['ka','dns','mtu'].forEach(i=>$(i).placeholder=t.keep);$('qrb').textContent=t.qr;$('copy').textContent=t.copy;$('dl').textContent=t.dl;$('t_priv').textContent=t.priv;$('lang').textContent=t.lang;
  $('presets').innerHTML=Object.keys(PRESETS).map(k=>`<label><input type="radio" name="p" value="${k}" ${k===P?'checked':''}>${PRESETS[k][L]}</label>`).join('');
  document.querySelectorAll('input[name=p]').forEach(r=>r.onchange=()=>{P=r.value;$('pdesc').textContent=PRESETS[P].d[L];save()});
  $('pdesc').textContent=PRESETS[P].d[L];
@@ -181,6 +182,21 @@ function convert(){
  const eh=$('ep_host').value.trim(),ep=$('ep_port').value.trim();
  if(/\s/.test(eh)||(ep&&!(/^\d{1,5}$/.test(ep)&&+ep>0&&+ep<65536))){msg.className='msg err';msg.textContent=t.badep;return}
  if(eh&&(eh!==OR.host||ep!==OR.port))lines=setKey(lines,'peer','Endpoint',(eh.includes(':')&&eh[0]!=='['?'['+eh+']':eh)+(ep?':'+ep:''),true);
+ let v6ep=false;
+ if($('v4').checked){
+  let cur='',anyA=false,hasA=false;const o=[];
+  for(const x of lines){
+   const h=x.match(/^\s*\[(.+?)\]/);if(h){cur=h[1].toLowerCase();o.push(x);continue}
+   const m=x.match(/^(\s*)(Address|DNS|AllowedIPs)(\s*=\s*)(.*?)\s*$/i);
+   if(m&&((cur==='interface'&&/^(address|dns)$/i.test(m[2]))||(cur==='peer'&&/^allowedips$/i.test(m[2])))){
+    const k=m[2].toLowerCase(),keep=m[4].split(',').map(z=>z.trim()).filter(z=>z&&!z.includes(':'));
+    if(k==='address'){anyA=true;if(keep.length)hasA=true}
+    if(!keep.length){if(k==='allowedips')o.push(m[1]+m[2]+m[3]+'0.0.0.0/0');continue}
+    o.push(m[1]+m[2]+m[3]+keep.join(', '));continue}
+   o.push(x)}
+  if(anyA&&!hasA){msg.className='msg err';msg.textContent=t.nov4;return}
+  lines=o;v6ep=lines.some(x=>/^\s*Endpoint\s*=\s*\[/i.test(x));
+ }
  const s=lines.findIndex(l=>/^\s*\[Interface\]/i.test(l));
  if(s<0){msg.className='msg err';msg.textContent=t.bad;return}
  let e=lines.findIndex((l,i)=>i>s&&/^\s*\[/.test(l));if(e<0)e=lines.length;
@@ -197,7 +213,7 @@ function convert(){
  PRESETS[P].i().forEach((x,i)=>add.push('I'+(i+1)+' = '+x));
  lines.splice(e,0,...add);
  $('out').value=lines.join('\n');$('qr').hidden=true;
- msg.textContent=t.done+(hadSH?' '+t.kept:'');save();
+ msg.textContent=t.done+(hadSH?' '+t.kept:'')+(v6ep?' '+t.v4ep:'');save();
 }
 $('go').onclick=convert;
 $('in').oninput=fillEp;
@@ -210,7 +226,7 @@ $('file').onchange=async e=>{const f=e.target.files[0];if(f){$('in').value=await
 $('copy').onclick=async()=>{const v=$('out').value;if(!v)return;try{await navigator.clipboard.writeText(v)}catch(_){$('out').select();document.execCommand('copy')}$('msg').className='msg';$('msg').textContent=T[L].copied};
 $('dl').onclick=()=>{const v=$('out').value;if(!v)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([v],{type:'text/plain'}));a.download='amnezia.conf';a.click()};
 load();
-['rz','sh','jc','jmin','jmax','ka','dns','mtu'].forEach(id=>$(id).onchange=save);
+['rz','sh','v4','jc','jmin','jmax','ka','dns','mtu'].forEach(id=>$(id).onchange=save);
 render();
 </script>
 </body>
